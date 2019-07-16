@@ -1,32 +1,3 @@
-# Todos ----
-# TODO change envir .Global to current shiny envir
-# TODO (https://shiny.rstudio.com/articles/scoping.html)
-# TODO ensure earnings date is correct due to AM or PM reporting
-# TODO (http://www.shinyapps.io/#_pricing)
-# TODO zero line on the ggvis trade_profit chart causes issues when axis choice is modified in UI
-# TODO Add data entries for skipped trades due to study inputs or data issues to display in reports
-# TODO study short_put_spread
-# TODO study short_call_spread
-# TODO study long_call
-# TODO study long_call_spread
-# TODO study long_put
-# TODO study long_put_spread
-# TODO study short_put_ladder
-# TODO study short_call_ladder
-# TODO extend long and short logic to all studies so allow for consistent profit calculations
-# TODO decide on standard implementation of signs for buy and sell cost (neg for buy?)
-# TODO exclude color column from the results table output
-# TODO sort the results table with newest trade at the top
-# TODO implement solutions here (https://github.com/daattali/advanced-shiny)
-# TODO check this list out (http://enhancedatascience.com/2017/07/10/the-packages-you-need-for-your-r-shiny-application/)
-# TODO (http://www.ggplot2-exts.org/gallery/)
-# TODO add testthat scripts
-# TODO move all functions to their own .R file for testthat
-# TODO make all function names start with same prefix when grouped like functions ie(open_put, open_call, close_put, close_call)
-# TODO move data to the package directory and remove from .git
-# TODO enquo and quo for the variable selection in plotting axis
-# TODO aes string in ggplot to tidy evalutation
-
 # Shiny Server ----
 shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(stopApp) # Stops the shiny server when the browser window is closed

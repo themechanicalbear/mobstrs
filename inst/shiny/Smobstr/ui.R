@@ -1,21 +1,3 @@
-# Todos ----
-# TODO Add menu items to show why trades were not opened
-# TODO Add buy and hold to the profit plot (Short Put, Strangle complete)
-# TODO Change buy and hold plot to return on margin instead of profit
-# TODO Test all stocks, studies, and dates
-# TODO Move to root folder
-# TODO If expiration is reached, make full profit or specific loss instead of just
-#      end of day price
-# TODO Add confidence intervals to the plots
-# TODO Function names to verbs
-# TODO Argument names in functions (df, x, y, z, p, n)
-# TODO Detail arguments should always be given a default value
-# TODO List the best results already run on the site for reference or competition for customers
-# TODO Cache each run so that it can be retrieved faster
-#      (https://shiny.rstudio.com/articles/persistent-data-storage.html)
-# TODO Data sets (https://www.wallstreethorizon.com/corporate-event-calendars)
-# TODO historicaloptiondata.com usage terms review
-
 # Shiny UI ----
 # JavaScript ----
 actionLink <- function(inputId, ...) {

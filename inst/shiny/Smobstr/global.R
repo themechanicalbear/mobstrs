@@ -1,7 +1,3 @@
-# Todos ----
-# TODO Should axis variable be in global?
-# TODO profile app - profvis::profvis(shiny::runApp())
-
 # Global setup ----
 suppressWarnings(suppressMessages(suppressPackageStartupMessages({
   library_list <- c("shiny", "shinythemes", "shinydashboard", "shinyjs", "ggvis", "rbokeh",
