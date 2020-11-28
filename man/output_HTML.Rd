@@ -11,6 +11,3 @@ output_HTML()
 output_HTML Called by the server.R script to send HTML output to screen
 }
 }
-\examples{
-
-}

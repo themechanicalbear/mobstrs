@@ -8,12 +8,33 @@ calc_mrgn(strat = NULL, prc = NULL, spstrk = NULL, lpstrk = NULL,
   scstrk = NULL, lcstrk = NULL, spcred = NULL, lpcred = NULL,
   sccred = NULL, lccred = NULL, qty = 1, shares = 100)
 }
+\arguments{
+\item{strat}{String representing option strategy used in the study ie. Short Put}
+
+\item{prc}{numeric stock price}
+
+\item{spstrk}{numeric short put strike}
+
+\item{lpstrk}{numeric long put strike}
+
+\item{scstrk}{numeric short call strike}
+
+\item{lcstrk}{numeric long call strike}
+
+\item{spcred}{numeric short put credit}
+
+\item{lpcred}{numeric long put credit}
+
+\item{sccred}{numeric short call credit}
+
+\item{lccred}{numeric long call credit}
+
+\item{qty}{numeric quantity of option positions}
+
+\item{shares}{numeric quantitiy of stock shares default 100}
+}
 \description{
 {
 calc_mrgn calculates the opening margin required depending on strategy type
 }
-}
-\examples{
-
-
 }

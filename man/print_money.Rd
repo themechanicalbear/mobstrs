@@ -19,6 +19,6 @@ print_money formats numerics to currency for out put in shiny app
 }
 \examples{
 print_money(14857)
-returns 14,857.00
+# returns 14,857.00
 
 }

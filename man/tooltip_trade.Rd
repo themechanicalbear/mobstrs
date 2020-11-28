@@ -19,7 +19,3 @@ tooltip_trade takes a results data.frame from a study and selects the row that
 you are hoveringformats numerics to currency for out put in shiny app
 }
 }
-\examples{
-tooltip_trade(results)
-
-}
