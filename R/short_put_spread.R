@@ -1,4 +1,4 @@
-#' @export
+
 short_put_spread <- function(progress.int, t) {
   shiny::withProgress(message = "Progress Bar", detail = "Opening Trades", {
     open_options_trades <- function(stock) {

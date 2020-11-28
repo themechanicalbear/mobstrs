@@ -94,7 +94,7 @@ shiny::shinyServer(function(input, output, session) {
     assign("openOption", input$openOption, envir = .GlobalEnv)
     if (openOption == "First of Month") {
       # monthly <- readRDS(here("data/monthly.RDS"))
-      assign("first_day", Smobstr:::monthly, envir = .GlobalEnv)
+      assign("first_day", mobstrs:::monthly, envir = .GlobalEnv)
       assign("inc.amount", .004)
     }
     else if (openOption == "High IV") {

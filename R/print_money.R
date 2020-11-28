@@ -10,7 +10,7 @@
 #'
 #' @examples
 #' print_money(14857)
-#' returns 14,857.00
+#' # returns 14,857.00
 #'
 print_money <- function(x){
   format(x, digits = 10, nsmall = 2, decimal.mark = ".", big.mark = ",")

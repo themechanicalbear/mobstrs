@@ -1,4 +1,4 @@
-#' @export
+
 close_short_call <- function(stock, open_date, strk, open_price, exp, close_date, spd) {
   close_details <- get(paste0(stock, "_options"), envir = as.environment(options_data)) %>%
     dplyr::filter(quotedate == close_date,

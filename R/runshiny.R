@@ -1,8 +1,8 @@
-#' @export
+
 runshiny <- function() {
-  appDir <- system.file("shiny", "tidybacktest", package = "tidybacktest")
+  appDir <- system.file("shiny", "Smobstr", package = "Smobstr")
   if (appDir == "") {
-    stop("Could not find shiny directory. Try re-installing `tidybacktest`.", call. = FALSE)
+    stop("Could not find shiny directory. Try re-installing `Smobstr`.", call. = FALSE)
   }
 
   shiny::runApp(appDir, display.mode = "normal")

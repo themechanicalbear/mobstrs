@@ -1,4 +1,4 @@
-#' @export
+
 dynamicplot <- function() {
   s1 <- input$DT_table_rows_current  # rows on the current page
   s2 <- input$DT_table_rows_all      # rows on all pages (after being filtered)

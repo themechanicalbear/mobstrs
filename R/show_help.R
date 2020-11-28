@@ -1,4 +1,4 @@
-#' @export
+
 show_help <- function(){
   rintrojs::introjs(
     session,

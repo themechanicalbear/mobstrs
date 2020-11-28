@@ -1,4 +1,4 @@
-#' @export
+
 open_short_put <- function(stock) {
   assign(paste0("open_options_", stock),
          get(paste0(stock, "_options"), envir = as.environment(options_data)) %>%

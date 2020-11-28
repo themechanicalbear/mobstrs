@@ -4,14 +4,17 @@
 #' output_HTML Called by the server.R script to send HTML output to screen
 #' }
 #'
-#' @export
-#'
-#' @examples
-#'
 
 output_HTML <- function(){
-  output$total_profit <- renderUI({HTML(paste0("Total return: $", print_money(tot_profit)))})
-  output$avg_prof_trade <- renderUI({HTML(paste0("Average return/trade: $", print_money(round(avg_profit, digits = 2))))})
+  num_t <- nrow(results)
+  total_profit <- 100 * sum(results$put_profit)
+  avg_prof_trade <- round(total_profit / num_t, digits = 2)
+  percent_winners <- percent(length(which(results$put_profit > 0)) / num_t)
+  maximum_loss <- 100 * ifelse(min(results$put_profit) >= 0, 0, min(results$put_profit))
+  max_win <- 100 * ifelse(max(results$put_profit) < 0, 0, max(results$put_profit))
+
+  output$total_profit <- renderUI({HTML(paste0("Total return: $", print_money(total_profit)))})
+  output$avg_prof_trade <- renderUI({HTML(paste0("Average return/trade: $", print_money(avg_prof_trade)))})
   output$avg_days <- renderUI({HTML(paste0("Average # days held: ", round(avg_days, digits = 0)))})
   output$avg_prof_day <- renderUI({HTML(paste0("Average return/day: $", print_money(round(avg_prof_day, digits = 2))))})
   output$percent_winners <- renderUI({HTML(paste0("Percent winners: ", percent_winners))})

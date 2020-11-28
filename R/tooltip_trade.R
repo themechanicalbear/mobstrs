@@ -8,10 +8,7 @@
 #' @return string of HTML formated values formated from the specific results row
 #' to be included in the hover over of a plot
 #'
-#' @examples
-#' tooltip_trade(results)
 #'
-#' @export
 tooltip_trade <- function(x) {
   if (is.null(x)) return(NULL)
   if (is.null(x$id)) return(NULL)

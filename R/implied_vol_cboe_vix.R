@@ -81,7 +81,7 @@ vol_calc <- function(dt) {
         dplyr::select(symbol, quotedate, r1, r2, t1, t2, k1, k2, m1, m2, f1, f2)
 
       summary_output <- rbind(summary_output, sub_data)
-      assign("summary_output", summary_output, envir = .GlobalEnv)
+      # assign("summary_output", summary_output, envir = .GlobalEnv)
     }
   }
 }

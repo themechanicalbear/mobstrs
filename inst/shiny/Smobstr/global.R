@@ -3,7 +3,7 @@ suppressWarnings(suppressMessages(suppressPackageStartupMessages({
   library_list <- c("shiny", "shinythemes", "shinydashboard", "shinyjs",
                     "ggvis", "rbokeh", "ggplot2", "scales", "shinyBS",
                     "shinycssloaders", "rintrojs", "dplyr", "here", "DT",
-                    "Smobstr")
+                    "mobstrs")
   invisible(lapply(library_list, require, character.only = TRUE))
 })))
 

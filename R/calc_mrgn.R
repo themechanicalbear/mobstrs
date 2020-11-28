@@ -4,11 +4,20 @@
 #' calc_mrgn calculates the opening margin required depending on strategy type
 #' }
 #'
-#' @export
 #'
 #'
-#'
-#' @examples
+#' @param strat String representing option strategy used in the study ie. Short Put
+#' @param prc numeric stock price
+#' @param spstrk numeric short put strike
+#' @param lpstrk numeric long put strike
+#' @param scstrk numeric short call strike
+#' @param lcstrk numeric long call strike
+#' @param spcred numeric short put credit
+#' @param lpcred numeric long put credit
+#' @param sccred numeric short call credit
+#' @param lccred numeric long call credit
+#' @param qty numeric quantity of option positions
+#' @param shares numeric quantitiy of stock shares default 100
 #'
 #'
 # Function arguments:-----------------------------------------------------------

@@ -4,9 +4,20 @@
 \alias{calc_mrgn}
 \title{Calculate initial margin on opening trades}
 \usage{
-calc_mrgn(strat = NULL, prc = NULL, spstrk = NULL, lpstrk = NULL,
-  scstrk = NULL, lcstrk = NULL, spcred = NULL, lpcred = NULL,
-  sccred = NULL, lccred = NULL, qty = 1, shares = 100)
+calc_mrgn(
+  strat = NULL,
+  prc = NULL,
+  spstrk = NULL,
+  lpstrk = NULL,
+  scstrk = NULL,
+  lcstrk = NULL,
+  spcred = NULL,
+  lpcred = NULL,
+  sccred = NULL,
+  lccred = NULL,
+  qty = 1,
+  shares = 100
+)
 }
 \arguments{
 \item{strat}{String representing option strategy used in the study ie. Short Put}

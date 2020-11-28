@@ -1,4 +1,4 @@
-#' @export
+
 format_results <- function(results) {
   results <- trade_results[[paste0("option_closes_", stock)]] %>%
     dplyr::select(-c(quotedate, expiration, dte)) %>%

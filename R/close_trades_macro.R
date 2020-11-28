@@ -1,4 +1,4 @@
-#' @export
+
 close_trades_macro <- function(stock, func) {
   df <- get(paste0("open_options_", stock), envir = as.environment(open_trades))
 
