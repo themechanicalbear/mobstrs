@@ -4,6 +4,7 @@
 #' output_HTML Called by the server.R script to send HTML output to screen
 #' }
 #'
+#' @export
 
 output_HTML <- function(){
   num_t <- nrow(results)

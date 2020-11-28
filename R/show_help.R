@@ -1,3 +1,4 @@
+#' @export
 
 show_help <- function(){
   rintrojs::introjs(
@@ -18,8 +19,8 @@ show_help <- function(){
                        if (this._currentStep==2) {
                        $('a[data-value=\"Trade Results\"]').removeClass('active');
                        $('a[data-value=\"Portfolio\"]').removeClass('active');
-                       $('a[data-value=\"Table\"]').addClass('active');
-                       $('a[data-value=\"Table\"]').trigger('click');
+                       $('a[data-value=\"Module_Table\"]').addClass('active');
+                       $('a[data-value=\"Module_Table\"]').trigger('click');
                        }")
     )
   )

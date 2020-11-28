@@ -44,6 +44,13 @@ shiny::shinyServer(function(input, output, session) {
     add_axis("y", title = "Profit") %>%
     bind_shiny("ggvis_trades")
 
+  # Testing modules
+  histogramServer("hist1")
+  output$out <- renderText(paste0("Bins: ", input$bins))
+  # End testing modules
+
+
+
   # Welcome message ----
   output$welcome_message <- shiny::renderUI({
     HTML("<p style=\"text-align: center; font-size: 60px; color: #FFFFFF;\">.</p>
@@ -226,23 +233,20 @@ shiny::shinyServer(function(input, output, session) {
       str_num_trades <- paste0("Number of trades in ", toupper(input$stock), ": ", nrow(results))
       HTML(str_num_trades)
     })
+
     environment(output_HTML) <- environment()
     output_HTML()
 
-    # results_table2 <- results_table[, c('trade_open', 'profit')]
-    results_table2 <- results_table
+    moduleTableServer("table1")
+    moduleGGPlotServer("ggplot_chart")
+    modulePortfolioPlotServer("portfolio_plot")
 
-    output$DT_table <- DT::renderDT(results_table,
-                                    options = list(pageLength = 15,
-                                                   lengthMenu = c(15, 25, nrow(results_table2)),
-                                                   scrollX = TRUE),
-                                    server = FALSE)
 
     # Scatterplot with contextual highlighting
-    output$x2 = renderPlot({
-      environment(dynamicplot) <- environment()
-      dynamicplot()
-    })
+    # output$x2 = renderPlot({
+    #   environment(dynamicplot) <- environment()
+    #   dynamicplot()
+    # })
 
     # Download table
     output$downloadData <- shiny::downloadHandler(
@@ -303,109 +307,6 @@ shiny::shinyServer(function(input, output, session) {
                     theme     = "white")
       }
       output$plotly_ta <- renderPlot({make_chart(input$stock)})
-    # End testing ideas for plot format
-
-    output$ggplot_portfolio <- shiny::renderPlot(
-      ggplot() +
-        geom_line(data = results,
-                   aes(x = entry_date, y = portfolio_profit)) +
-        xlab("Entry Date") +
-        ylab("Trade Profit") +
-        theme_bw() +
-        theme(axis.title = element_text(size = 14, face = "bold")),
-      height = 600, width = "auto")
-
-
-    # ggplot() +
-    #   # Strategy results
-    #   geom_line(data = results,
-    #             aes(x = trade_open, y = strategy_portfolio, color = "Strategy Portfolio")) +
-    #   # Strategy max
-    #   geom_vline(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
-    #   geom_point(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Strategy Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-    #                 color = "Strategy Portfolio")) +
-    #   # Strategy min
-    #   geom_vline(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
-    #   geom_point(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Strategy Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-    #                 color = "Strategy Portfolio")) +
-    #   # Strategy End
-    #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Strategy Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-    #             aes(x = trade_open + 90, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-    #                 color = "Strategy Portfolio")) +
-    #   # Stock results
-    #   geom_line(data = results,
-    #             aes(x = trade_open, y = stock_portfolio, color = "Stock Portfolio")) +
-    #   # Stock max
-    #   geom_vline(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1),
-    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
-    #   geom_point(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Stock Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-    #   # Stock min
-    #   geom_vline(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
-    #   geom_point(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Stock Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-    #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-    #   # Stock End
-    #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-    #                  color = "Stock Portfolio")) +
-    #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-    #             aes(x = trade_open + 90, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-    #   # Color scale
-    #   scale_colour_manual(name = "", values = c("Stock Portfolio" = "black",
-    #                                             "Strategy Portfolio" = "orange")) +
-    #   xlab("Date") +
-    #   ylab("Portfolio Profit") +
-    #   theme_bw() +
-    #   theme(axis.title = element_text(size = 14, face = "bold")),
-    # height = 600, width = "auto")
-
-    shiny::observe({
-      xvar_name <- names(axis_vars)[axis_vars == input$xvar]
-      yvar_name <- names(axis_vars)[axis_vars == input$yvar]
-
-      output$ggplot_profits <- shiny::renderPlot(
-        ggplot(results, aes_string(input$xvar, input$yvar)) +
-          geom_point(aes(colour = put_profit > 0), alpha = 0.5, size = 1) +
-          scale_fill_continuous(type = "viridis") +
-          # scale_colour_manual(name = 'profit > 0', values = setNames(c('#00a65a', 'red'), c(TRUE, FALSE))) +
-          xlab(xvar_name) +
-          ylab(yvar_name) +
-          theme_bw() +
-          theme(axis.title = element_text(size = 14, face = "bold")),
-        height = 600, width = "auto")
-    })
   })
 
   # Reset default values when inputs change ----

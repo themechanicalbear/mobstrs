@@ -10,15 +10,15 @@ useShinyjs()  # Setup shinyjs
 
 # Dashboard ----
 shinydashboard::dashboardPage(
-  skin = "green",
-  title = "The Mechanical Bear",
+  skin = global_shiny_skin_color,
+  title = global_shiny_title,
   shinydashboard::dashboardHeader(
-    title = a(href = 'http://www.themechanicalbear.com',
-              img(src = 'logo2.png', title = "The Mechanical Bear", height = "100px"),
+    title = a(href = global_website_url,
+              img(src = global_logo, title = global_shiny_title, height = "100px"),
               style = "padding-top:10px; padding-bottom:10px;"),
     tags$li(class = "dropdown",
             actionButton("help", "Press for instructions")),
-    tags$li(a(href = 'http://www.themechanicalbear.com',
+    tags$li(a(href = global_website_url,
               icon("cogs"),
               title = "Back to Apps Home"),
             class = "dropdown"),
@@ -49,10 +49,10 @@ shinydashboard::dashboardPage(
 
     shinydashboard::sidebarMenu(
       shinydashboard::menuItem("Study", tabName = "Study", icon = icon("cogs"), startExpanded = TRUE,
-                               shiny::selectInput("host", "Host", c("local", "git", "athena")),
+                               shiny::selectInput("host", "Host", global_host_types),
                                shiny::selectInput("stock", "Stock", symbol_list),
-                               shiny::selectInput("study", "Study", c("Short Put", "Short Call", "Short Put Spread")),
-                               shiny::selectInput("openOption", "Open on", c("First of Month", "High IV", "First of Week", "Daily"))),
+                               shiny::selectInput("study", "Study", global_sidebar_study_types),
+                               shiny::selectInput("openOption", "Open on", global_sidebar_openoptions)),
       shinydashboard::menuItem("Entry Criteria", tabName = "Entry Criteria", icon = icon("cogs"),
                                shiny::sliderInput("open_dte", "DTE", 0, 90, 30, step = 5),
                                shiny::conditionalPanel(
@@ -85,8 +85,6 @@ shinydashboard::dashboardPage(
                     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
                     shiny::htmlOutput("total_profit"),
                     shiny::htmlOutput("avg_prof_trade"),
-                    # shiny::htmlOutput("avg_prof_day"),
-                    # shiny::htmlOutput("avg_days"),
                     h4("")),
       shiny::column(width = 4,
                     shiny::htmlOutput("n_trades"),
@@ -101,32 +99,13 @@ shinydashboard::dashboardPage(
     shiny::fluidRow(
       tabBox(
         id = "tabset1", height = "800px", width = "1000px",
-        shiny::tabPanel("Trade Results",
-                        shiny::htmlOutput("welcome_message"),
-                        introBox(plotOutput("ggplot_profits", height = 650) %>%
-                                   withSpinner(color = "#0dc5c1"), data.step = 1, data.intro = "Here we will plot the
-                                 running proift of the chosen study against the buy and hold stock position."),
-                        shiny::fluidRow(
-                          shiny::column(width = 1, ""),
-                          shiny::column(width = 5,
-                                        shiny::selectInput("xvar", "X-axis variable", axis_vars, selected = "entry_date")),
-                          shiny::column(width = 6,
-                                        shiny::selectInput("yvar", "Y-axis variable", axis_vars, selected = "put_profit"))
-                        )
-
-      ),
-      shiny::tabPanel("Portfolio", introBox(plotOutput("ggplot_portfolio"), data.step = 2, data.intro = "Here we will plot
+        shiny::tabPanel("Portfolio", introBox(plotOutput("ggplot_portfolio"), data.step = 2, data.intro = "Here we will plot
                                               the running proift of the chosen study against the buy and hold stock position.")),
-      shiny::tabPanel("Plotly", plotOutput("plotly_ta")),
-      shiny::tabPanel("Table",
-                      introBox(shiny::downloadButton('downloadData', 'Download'), h4(" "), data.step = 4, data.intro = "Click this
-                                 button to download the results of the study in .csv format."),
-                      introBox(shiny::dataTableOutput('table'), data.step = 3, data.intro = "Here we will provide a table of the
-                                 trade results for download."),
-                      # column(8, DT::DTOutput('DT_table')),
-                      # column(4, ""))
-                      column(6, DT::DTOutput('DT_table')),
-                      column(6, plotOutput('x2', height = 500)))
+        shiny::tabPanel("Plotly", plotOutput("plotly_ta")),
+        shiny::tabPanel("hist", histogramUI("hist1"), textOutput("out")),
+        shiny::tabPanel("Module_Table", moduleTableUI("table1")),
+        shiny::tabPanel("Module_GGPlot", moduleGGPlotUI("ggplot_chart")),
+        shiny::tabPanel("Module_Portfolio_Plot", modulePortfolioPlotUI("portfolio_plot"))
       )
     )
   )
