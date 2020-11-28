@@ -35,7 +35,7 @@ shiny::shinyServer(function(input, output, session) {
                                      status = "info", href = "mailto:jason@themechanicalbear.com")
   })
 
-  data.frame(x_rng = c(as.Date("2012-01-03"), as.Date("2018-01-03")),
+  data.frame(x_rng = c(as.Date("2012-01-03"), as.Date("2021-01-03")),
              y_rng = c(-100, 100)) %>%
     ggvis(~x_rng, ~y_rng) %>%
     set_options(width = "auto",
@@ -70,9 +70,9 @@ shiny::shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'stock', choices = symbol_list)
     }
     if (input$host == "athena") {
-      athena <- mobstr::athena_connect("mechanicalbear-options")
+      athena <- mobstr::athena_connect(global_athena_db)
       symbol_list <- athena %>%
-        dplyr::tbl("mechanicalbear_athena") %>%
+        dplyr::tbl(global_athena_tbl) %>%
         dplyr::distinct(symbol) %>%
         dplyr::arrange(symbol) %>%
         dplyr::collect()
@@ -148,7 +148,7 @@ shiny::shinyServer(function(input, output, session) {
 
       assign("study_params", study_params, envir = .GlobalEnv)
 
-      athena <- mobstr::athena_connect("mechanicalbear-options")
+      athena <- mobstr::athena_connect(global_athena_db)
       tbl_list <- DBI::dbListTables(athena)
 
       # if (study_params %in% tbl_list) {
@@ -162,7 +162,7 @@ shiny::shinyServer(function(input, output, session) {
 
       # else {
         opened_puts <- mobstr::open_leg(conn = athena,
-                                        table = "mechanicalbear_athena",
+                                        table = global_athena_tbl,
                                         stock = stock,
                                         put_call = "put",
                                         direction = "short",
@@ -175,7 +175,7 @@ shiny::shinyServer(function(input, output, session) {
         assign("opened_puts", opened_puts, envir = open_trades)
 
         sub_options <- athena %>%
-          dplyr::tbl("mechanicalbear_athena") %>%
+          dplyr::tbl(global_athena_tbl) %>%
           dplyr::filter(symbol == stock) %>%
           dplyr::filter(quotedate == expiration,
                         strike %in% !!opened_puts$put_strike) %>%
@@ -204,10 +204,10 @@ shiny::shinyServer(function(input, output, session) {
         #               object = paste0(study_params, ".csv"))
 
         # Write to Athena
-        # athena <- mobstr::athena_connect("mechanicalbear-options")
+        # athena <- mobstr::athena_connect(global_athena_db)
 
         # mobstr::athena_load(conn = athena,
-        #             database = "mechanicalbear-options",
+        #             database = global_athena_db,
         #             s3_bucket = "mechanicalbear-athena",
         #             name = study_params,
         #             df = results)

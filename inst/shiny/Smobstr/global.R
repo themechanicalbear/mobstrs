@@ -23,3 +23,6 @@ open_trades <- new.env(hash = TRUE, size = NA)
 options_data <- new.env(hash = TRUE, size = NA)
 close_trades <- new.env(hash = TRUE, size = NA)
 trade_results <- new.env(hash = TRUE, size = NA)
+
+global_athena_db <- Sys.getenv("AWS_ATHENA_DATABASE_SHINY_APP")
+global_athena_tbl <- Sys.getenv("AWS_ATHENA_TABLE_SHINY_APP")
