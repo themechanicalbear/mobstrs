@@ -5,7 +5,7 @@ shiny::shinyServer(function(input, output, session) {
   main_color <- "#00a65a" # Green
 
   # Uncomment next line for debugging to console
-  # options(shiny.trace = TRUE)
+  options(shiny.trace = TRUE)
   # The following two lines can be inserted to box in code section for profiling
   # Rprof("boot.out")
   # Rprof(NULL)
@@ -70,8 +70,13 @@ shiny::shinyServer(function(input, output, session) {
       updateSelectizeInput(session, 'stock', choices = symbol_list)
     }
     if (input$host == "athena") {
-      athena <- mobstr::athena_connect("default")
-      symbol_list <- DBI::dbListTables(athena)
+      athena <- mobstr::athena_connect("mechanicalbear-options")
+      symbol_list <- athena %>%
+        dplyr::tbl("mechanicalbear_athena") %>%
+        dplyr::distinct(symbol) %>%
+        dplyr::arrange(symbol) %>%
+        dplyr::collect()
+      print(symbol_list)
       assign("symbol_list", symbol_list, envir = .GlobalEnv)
       updateSelectizeInput(session, 'stock', choices = symbol_list)
     }
@@ -80,13 +85,16 @@ shiny::shinyServer(function(input, output, session) {
   # Loading image ----
   shiny::observeEvent(input$goPlot, {
     # Reset the results data.frame when inputs are changed
-    if (exists("results", envir = .GlobalEnv) && is.data.frame(get("results"))) {rm(results, envir = .GlobalEnv)}
+    if (exists("results", envir = .GlobalEnv) &&
+        is.data.frame(get("results"))) {
+      rm(results, envir = .GlobalEnv)
+    }
 
     # Determine customer's choice for frequency and set
     assign("openOption", input$openOption, envir = .GlobalEnv)
     if (openOption == "First of Month") {
-      monthly <- readRDS(here("data/monthly.RDS"))
-      assign("first_day", monthly, envir = .GlobalEnv)
+      # monthly <- readRDS(here("data/monthly.RDS"))
+      assign("first_day", Smobstr:::monthly, envir = .GlobalEnv)
       assign("inc.amount", .004)
     }
     else if (openOption == "High IV") {
@@ -133,35 +141,78 @@ shiny::shinyServer(function(input, output, session) {
     if (study == "Short Call") {short_call(progress.int, t)}
     # if (study == "Short Put") {short_put(progress.int, t)}
     if (study == "Short Put") {
-      opened_puts <- mobstr::open_leg(conn = athena,
-                                      stock = stock,
-                                      put_call = "put",
-                                      direction = "short",
-                                      tar_delta = p_delta,
-                                      tar_dte = o_dte)
+      study_params <- tolower(paste0(input$study, "_", input$stock, "_",
+                             input$open_dte))
+      study_params <- gsub("-", "", study_params)
+      study_params <- gsub(" ", "", study_params)
 
-      sub_options <- athena %>%
-        dplyr::tbl(stock) %>%
-        dplyr::filter(quotedate == expiration,
-               strike %in% !!opened_puts$put_strike) %>%
-        dplyr::collect()
+      assign("study_params", study_params, envir = .GlobalEnv)
 
-      results <- purrr::pmap_dfr(list(df = list(sub_options),
-                    entry_date = opened_puts$quotedate,
-                    exp = opened_puts$expiration,
-                    typ = list("put"),
-                    stk = opened_puts$put_strike,
-                    entry_mid = opened_puts$put_open_short,
-                    entry_delta = opened_puts$delta,
-                    stk_price = opened_puts$close,
-                    direction = list("short")),
-               mobstr::close_leg)
+      athena <- mobstr::athena_connect("mechanicalbear-options")
+      tbl_list <- DBI::dbListTables(athena)
 
-      # assign_global(results, results)
+      # if (study_params %in% tbl_list) {
+      #   results <- athena %>%
+      #     dplyr::tbl(study_params) %>%
+      #     dplyr::collect()
+      #
+      #   assign("results", results, envir = .GlobalEnv)
+      #   assign("results_table", results, envir = .GlobalEnv)
+      # }
 
-      assign("results", results, envir = .GlobalEnv)
-      assign("results_table", results, envir = .GlobalEnv)
-      }
+      # else {
+        opened_puts <- mobstr::open_leg(conn = athena,
+                                        table = "mechanicalbear_athena",
+                                        stock = stock,
+                                        put_call = "put",
+                                        direction = "short",
+                                        tar_delta = p_delta,
+                                        tar_dte = o_dte) %>%
+          dplyr::mutate(quotedate = as.Date(quotedate, "%Y-%m-%d"),
+                        expiration = as.Date(expiration, "%Y-%m-%d")) %>%
+          dplyr::filter(quotedate %in% first_day$date)
+
+        assign("opened_puts", opened_puts, envir = open_trades)
+
+        sub_options <- athena %>%
+          dplyr::tbl("mechanicalbear_athena") %>%
+          dplyr::filter(symbol == stock) %>%
+          dplyr::filter(quotedate == expiration,
+                        strike %in% !!opened_puts$put_strike) %>%
+          dplyr::collect()
+
+        results <- purrr::pmap_dfr(list(df = list(sub_options),
+                                        entry_date = opened_puts$quotedate,
+                                        exp = opened_puts$expiration,
+                                        typ = list("put"),
+                                        stk = opened_puts$put_strike,
+                                        entry_mid = opened_puts$put_open_short,
+                                        entry_delta = opened_puts$delta,
+                                        stk_price = opened_puts$close,
+                                        direction = list("short")),
+                                   mobstr::close_leg) %>%
+          arrange(entry_date) %>%
+          mutate(profit = put_profit * 100) %>%
+          mutate(portfolio_profit = cumsum(profit))
+
+        # assign_global(results, results)
+        assign("results", results, envir = .GlobalEnv)
+        assign("results_table", results, envir = .GlobalEnv)
+
+        # aws.s3::s3write_using(results, FUN = readr::write_csv,
+        #               bucket = paste0("mechanicalbear-athena", "/", study_params),
+        #               object = paste0(study_params, ".csv"))
+
+        # Write to Athena
+        # athena <- mobstr::athena_connect("mechanicalbear-options")
+
+        # mobstr::athena_load(conn = athena,
+        #             database = "mechanicalbear-options",
+        #             s3_bucket = "mechanicalbear-athena",
+        #             name = study_params,
+        #             df = results)
+      #}
+    }
     if (study == "Short Put Spread") {short_put_spread(progress.int, t)}
     if (study == "Long Stock") {LongStock(progress.int, t)}
     if (study == "Strangle") {strangle(progress.int, data_set, t)}
@@ -173,7 +224,7 @@ shiny::shinyServer(function(input, output, session) {
       HTML("")
     })
     output$n_trades <- shiny::renderUI({
-      str_num_trades <- paste0("Number of trades in ", input$stock, ": ", nrow(results))
+      str_num_trades <- paste0("Number of trades in ", toupper(input$stock), ": ", nrow(results))
       HTML(str_num_trades)
     })
     environment(output_HTML) <- environment()
@@ -219,10 +270,46 @@ shiny::shinyServer(function(input, output, session) {
         dplyr::ungroup()
     })
 
+    # Testing ideas for plot format
+    library(quantmod)
+    library(xts)
+    library(rvest)
+    library(tidyverse)
+    library(stringr)
+    library(forcats)
+    library(lubridate)
+    library(plotly)
+    library(dplyr)
+    library(PerformanceAnalytics)
+
+    # Download data for a stock if needed, and return the data
+    require_symbol <- function(symbol, envir = parent.frame()) {
+      if (is.null(envir[[symbol]])) {
+        envir[[symbol]] <- quantmod::getSymbols(symbol, auto.assign = FALSE)
+      }
+      envir[[symbol]]
+    }
+
+      # Create an environment for storing data
+      symbol_env <- new.env()
+      # Make a chart for a symbol, with the settings from the inputs
+      make_chart <- function(symbol) {
+        symbol_data <- require_symbol(symbol, symbol_env)
+        quantmod::chartSeries(symbol_data,
+                    name      = symbol,
+                    type      = "auto",
+                    TA = 'addBBands(); addVo(); addMACD()',
+                    subset = '2018',
+                    log.scale = FALSE,
+                    theme     = "white")
+      }
+      output$plotly_ta <- renderPlot({make_chart(input$stock)})
+    # End testing ideas for plot format
+
     output$ggplot_portfolio <- shiny::renderPlot(
       ggplot() +
-        geom_point(data = results,
-                   aes(x = entry_date, y = put_profit)) +
+        geom_line(data = results,
+                   aes(x = entry_date, y = portfolio_profit)) +
         xlab("Entry Date") +
         ylab("Trade Profit") +
         theme_bw() +
@@ -230,80 +317,80 @@ shiny::shinyServer(function(input, output, session) {
       height = 600, width = "auto")
 
 
-      # ggplot() +
-      #   # Strategy results
-      #   geom_line(data = results,
-      #             aes(x = trade_open, y = strategy_portfolio, color = "Strategy Portfolio")) +
-      #   # Strategy max
-      #   geom_vline(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
-      #   geom_point(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Strategy Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
-      #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-      #                 color = "Strategy Portfolio")) +
-      #   # Strategy min
-      #   geom_vline(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
-      #   geom_point(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Strategy Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
-      #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-      #                 color = "Strategy Portfolio")) +
-      #   # Strategy End
-      #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-      #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Strategy Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-      #             aes(x = trade_open + 90, y = strategy_portfolio, label = strategy_portfolio, size = 7,
-      #                 color = "Strategy Portfolio")) +
-      #   # Stock results
-      #   geom_line(data = results,
-      #             aes(x = trade_open, y = stock_portfolio, color = "Stock Portfolio")) +
-      #   # Stock max
-      #   geom_vline(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1),
-      #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
-      #   geom_point(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Stock Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
-      #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-      #   # Stock min
-      #   geom_vline(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
-      #   geom_point(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-      #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Stock Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
-      #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
-      #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-      #   # Stock End
-      #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-      #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
-      #                  color = "Stock Portfolio")) +
-      #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
-      #             aes(x = trade_open + 90, y = stock_portfolio, label = stock_portfolio, size = 7)) +
-      #   # Color scale
-      #   scale_colour_manual(name = "", values = c("Stock Portfolio" = "black",
-      #                                             "Strategy Portfolio" = "orange")) +
-      #   xlab("Date") +
-      #   ylab("Portfolio Profit") +
-      #   theme_bw() +
-      #   theme(axis.title = element_text(size = 14, face = "bold")),
-      # height = 600, width = "auto")
+    # ggplot() +
+    #   # Strategy results
+    #   geom_line(data = results,
+    #             aes(x = trade_open, y = strategy_portfolio, color = "Strategy Portfolio")) +
+    #   # Strategy max
+    #   geom_vline(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
+    #   geom_point(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Strategy Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, strategy_portfolio == max(strategy_portfolio)) %>%
+    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
+    #                 color = "Strategy Portfolio")) +
+    #   # Strategy min
+    #   geom_vline(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "orange") +
+    #   geom_point(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Strategy Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, strategy_portfolio == min(strategy_portfolio)) %>%
+    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #             aes(x = trade_open + 45, y = strategy_portfolio, label = strategy_portfolio, size = 7,
+    #                 color = "Strategy Portfolio")) +
+    #   # Strategy End
+    #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
+    #              aes(x = trade_open, y = strategy_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Strategy Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
+    #             aes(x = trade_open + 90, y = strategy_portfolio, label = strategy_portfolio, size = 7,
+    #                 color = "Strategy Portfolio")) +
+    #   # Stock results
+    #   geom_line(data = results,
+    #             aes(x = trade_open, y = stock_portfolio, color = "Stock Portfolio")) +
+    #   # Stock max
+    #   geom_vline(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1),
+    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
+    #   geom_point(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Stock Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, stock_portfolio == max(stock_portfolio)) %>%
+    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
+    #   # Stock min
+    #   geom_vline(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(xintercept = trade_open), linetype = "dotted", size = 2, color = "black") +
+    #   geom_point(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
+    #                dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Stock Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, stock_portfolio == min(stock_portfolio)) %>%
+    #               dplyr::filter(dplyr::row_number() == 1), show.legend = FALSE,
+    #             aes(x = trade_open + 45, y = stock_portfolio, label = stock_portfolio, size = 7)) +
+    #   # Stock End
+    #   geom_point(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
+    #              aes(x = trade_open, y = stock_portfolio, alpha = 0.5, size = 5,
+    #                  color = "Stock Portfolio")) +
+    #   geom_text(data = dplyr::filter(results, trade_open == max(trade_open)), show.legend = FALSE,
+    #             aes(x = trade_open + 90, y = stock_portfolio, label = stock_portfolio, size = 7)) +
+    #   # Color scale
+    #   scale_colour_manual(name = "", values = c("Stock Portfolio" = "black",
+    #                                             "Strategy Portfolio" = "orange")) +
+    #   xlab("Date") +
+    #   ylab("Portfolio Profit") +
+    #   theme_bw() +
+    #   theme(axis.title = element_text(size = 14, face = "bold")),
+    # height = 600, width = "auto")
 
     shiny::observe({
       xvar_name <- names(axis_vars)[axis_vars == input$xvar]
@@ -311,8 +398,9 @@ shiny::shinyServer(function(input, output, session) {
 
       output$ggplot_profits <- shiny::renderPlot(
         ggplot(results, aes_string(input$xvar, input$yvar)) +
-          geom_point(aes(colour = profit > 0), alpha = 0.5, size = 3) +
-          scale_colour_manual(name = 'profit > 0', values = setNames(c('#00a65a', 'red'), c(TRUE, FALSE))) +
+          geom_point(aes(colour = put_profit > 0), alpha = 0.5, size = 1) +
+          scale_fill_continuous(type = "viridis") +
+          # scale_colour_manual(name = 'profit > 0', values = setNames(c('#00a65a', 'red'), c(TRUE, FALSE))) +
           xlab(xvar_name) +
           ylab(yvar_name) +
           theme_bw() +

@@ -1,7 +1,9 @@
 # Global setup ----
 suppressWarnings(suppressMessages(suppressPackageStartupMessages({
-  library_list <- c("shiny", "shinythemes", "shinydashboard", "shinyjs", "ggvis", "rbokeh",
-                    "ggplot2", "scales", "shinyBS", "shinycssloaders", "rintrojs", "here", "DT")
+  library_list <- c("shiny", "shinythemes", "shinydashboard", "shinyjs",
+                    "ggvis", "rbokeh", "ggplot2", "scales", "shinyBS",
+                    "shinycssloaders", "rintrojs", "dplyr", "here", "DT",
+                    "Smobstr")
   invisible(lapply(library_list, require, character.only = TRUE))
 })))
 
@@ -15,15 +17,7 @@ axis_vars <- c(
   "RSI" = "open_rsi",
   "Year" = "year")
 
-data_root <- here::here("data/git_options/")
-symbol_list <- gsub(".RDS", "", list.files(here("data/git_options/")))
-
-load_options_data <- function(stock) {
-  data <- paste0(data_root, stock, ".RDS")
-  assign(paste0(stock, "_options"),
-         readRDS(data),
-         envir = options_data)
-}
+symbol_list <- ("")
 
 open_trades <- new.env(hash = TRUE, size = NA)
 options_data <- new.env(hash = TRUE, size = NA)

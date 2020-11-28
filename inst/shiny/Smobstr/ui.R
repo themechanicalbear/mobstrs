@@ -49,7 +49,7 @@ shinydashboard::dashboardPage(
 
     shinydashboard::sidebarMenu(
       shinydashboard::menuItem("Study", tabName = "Study", icon = icon("cogs"), startExpanded = TRUE,
-                               shiny::selectInput("host", "Host", c("athena", "git", "local")),
+                               shiny::selectInput("host", "Host", c("local", "git", "athena")),
                                shiny::selectInput("stock", "Stock", symbol_list),
                                shiny::selectInput("study", "Study", c("Short Put", "Short Call", "Short Put Spread")),
                                shiny::selectInput("openOption", "Open on", c("First of Month", "High IV", "First of Week", "Daily"))),
@@ -85,8 +85,8 @@ shinydashboard::dashboardPage(
                     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")),
                     shiny::htmlOutput("total_profit"),
                     shiny::htmlOutput("avg_prof_trade"),
-                    shiny::htmlOutput("avg_prof_day"),
-                    shiny::htmlOutput("avg_days"),
+                    # shiny::htmlOutput("avg_prof_day"),
+                    # shiny::htmlOutput("avg_days"),
                     h4("")),
       shiny::column(width = 4,
                     shiny::htmlOutput("n_trades"),
@@ -103,7 +103,8 @@ shinydashboard::dashboardPage(
         id = "tabset1", height = "800px", width = "1000px",
         shiny::tabPanel("Trade Results",
                         shiny::htmlOutput("welcome_message"),
-                        introBox(plotOutput("ggplot_profits", height = 650), data.step = 1, data.intro = "Here we will plot the
+                        introBox(plotOutput("ggplot_profits", height = 650) %>%
+                                   withSpinner(color = "#0dc5c1"), data.step = 1, data.intro = "Here we will plot the
                                  running proift of the chosen study against the buy and hold stock position."),
                         shiny::fluidRow(
                           shiny::column(width = 1, ""),
@@ -116,6 +117,7 @@ shinydashboard::dashboardPage(
       ),
       shiny::tabPanel("Portfolio", introBox(plotOutput("ggplot_portfolio"), data.step = 2, data.intro = "Here we will plot
                                               the running proift of the chosen study against the buy and hold stock position.")),
+      shiny::tabPanel("Plotly", plotOutput("plotly_ta")),
       shiny::tabPanel("Table",
                       introBox(shiny::downloadButton('downloadData', 'Download'), h4(" "), data.step = 4, data.intro = "Click this
                                  button to download the results of the study in .csv format."),
