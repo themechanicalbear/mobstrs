@@ -1,12 +1,53 @@
 Package: Smobstr
 Type: Package
-Title: What the Package Does (Title Case)
+Title: A collection of R functions for options trading analysis
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: c(
+    person("Jason", "Taylor", , "jason@themechanicalbear.com", c("aut", "cre"))
+    )
+Maintainer: The package maintainer <jason@themechanicalbear.com>
+Description: mobstr (Mechanical Options Backtesting Strategies w/ Tidy R)
+    Collection of R functions for backtesting options trading strategies including short put, short vertical,
+    iron condor, and others. With functions to calculate portfolio details like margin in use, concurrent positions
+    earnings trades, contango, and modules for shiny.
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
+BugReports: https://github.com/themechanicalbear/Smobstr/issues
+Depends: R (>= 3.1.2)
+Imports: 
+    dplyr,
+    shiny,
+    DBI,
+    TTR,
+    odbc,
+    here,
+    RJDBC,
+    aws.s3,
+    lubridate,
+    purrr,
+    rlang,
+    knitr,
+    data.table, 
+    readr,
+    rintrojs,
+    shinyjs,
+    shinydashboard,
+    shinycssloaders,
+    ggvis,
+    dbplyr,
+    mobstr,
+    forcats,
+    PerformanceAnalytics,
+    plotly,
+    quantmod,
+    rvest,
+    tidyverse,
+    shinythemes,
+    ggplot2,
+    scales,
+    shinyBS,
+    DT,
+    rbokeh
+VignetteBuilder: knitr
 RoxygenNote: 6.1.1
