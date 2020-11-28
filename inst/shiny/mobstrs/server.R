@@ -2,10 +2,9 @@
 shiny::shinyServer(function(input, output, session) {
   session$onSessionEnded(stopApp) # Stops the shiny server when the browser window is closed
   shiny::shinyOptions(progress.style = "old")
-  main_color <- "#00a65a" # Green
-
-  # Uncomment next line for debugging to console
-  options(shiny.trace = TRUE)
+  main_color <- global_main_shiny_color
+  print(global_shiny_app_debug_mode)
+  options(shiny.trace = global_shiny_app_debug_mode) # Debug to the console when TRUE set via environment variable
   # The following two lines can be inserted to box in code section for profiling
   # Rprof("boot.out")
   # Rprof(NULL)

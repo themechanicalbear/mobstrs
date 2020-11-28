@@ -26,3 +26,5 @@ trade_results <- new.env(hash = TRUE, size = NA)
 
 global_athena_db <- Sys.getenv("AWS_ATHENA_DATABASE_SHINY_APP")
 global_athena_tbl <- Sys.getenv("AWS_ATHENA_TABLE_SHINY_APP")
+global_main_shiny_color <- Sys.getenv("SHINY_APP_MAIN_COLOR")
+global_shiny_app_debug_mode <- as.logical(Sys.getenv("SHINY_APP_DEBUG_MODE"))
