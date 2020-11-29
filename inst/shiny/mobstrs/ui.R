@@ -99,13 +99,10 @@ shinydashboard::dashboardPage(
     shiny::fluidRow(
       tabBox(
         id = "tabset1", height = "800px", width = "1000px",
-        shiny::tabPanel("Portfolio", introBox(plotOutput("ggplot_portfolio"), data.step = 2, data.intro = "Here we will plot
-                                              the running proift of the chosen study against the buy and hold stock position.")),
-        shiny::tabPanel("Plotly", plotOutput("plotly_ta")),
-        shiny::tabPanel("hist", histogramUI("hist1"), textOutput("out")),
         shiny::tabPanel("Module_Table", moduleTableUI("table1")),
         shiny::tabPanel("Module_GGPlot", moduleGGPlotUI("ggplot_chart")),
-        shiny::tabPanel("Module_Portfolio_Plot", modulePortfolioPlotUI("portfolio_plot"))
+        shiny::tabPanel("Module_Portfolio_Plot", modulePortfolioPlotUI("portfolio_plot")),
+        shiny::tabPanel("Module_Quantmod_Plot", moduleQuantmodPlotUI("quantmod_plot"))
       )
     )
   )

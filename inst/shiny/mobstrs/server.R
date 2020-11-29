@@ -44,13 +44,6 @@ shiny::shinyServer(function(input, output, session) {
     add_axis("y", title = "Profit") %>%
     bind_shiny("ggvis_trades")
 
-  # Testing modules
-  histogramServer("hist1")
-  output$out <- renderText(paste0("Bins: ", input$bins))
-  # End testing modules
-
-
-
   # Welcome message ----
   output$welcome_message <- shiny::renderUI({
     HTML("<p style=\"text-align: center; font-size: 60px; color: #FFFFFF;\">.</p>
@@ -240,6 +233,7 @@ shiny::shinyServer(function(input, output, session) {
     moduleTableServer("table1")
     moduleGGPlotServer("ggplot_chart")
     modulePortfolioPlotServer("portfolio_plot")
+    moduleQuantmodPlotServer("quantmod_plot", input$stock)
 
 
     # Scatterplot with contextual highlighting
@@ -273,7 +267,7 @@ shiny::shinyServer(function(input, output, session) {
         dplyr::ungroup()
     })
 
-    # Testing ideas for plot format
+    # # Testing ideas for plot format needed for the quantmod plot
     library(quantmod)
     library(xts)
     library(rvest)
@@ -285,36 +279,5 @@ shiny::shinyServer(function(input, output, session) {
     library(dplyr)
     library(PerformanceAnalytics)
 
-    # Download data for a stock if needed, and return the data
-    require_symbol <- function(symbol, envir = parent.frame()) {
-      if (is.null(envir[[symbol]])) {
-        envir[[symbol]] <- quantmod::getSymbols(symbol, auto.assign = FALSE)
-      }
-      envir[[symbol]]
-    }
-
-      # Create an environment for storing data
-      symbol_env <- new.env()
-      # Make a chart for a symbol, with the settings from the inputs
-      make_chart <- function(symbol) {
-        symbol_data <- require_symbol(symbol, symbol_env)
-        quantmod::chartSeries(symbol_data,
-                    name      = symbol,
-                    type      = "auto",
-                    TA = 'addBBands(); addVo(); addMACD()',
-                    subset = '2018',
-                    log.scale = FALSE,
-                    theme     = "white")
-      }
-      output$plotly_ta <- renderPlot({make_chart(input$stock)})
   })
-
-  # Reset default values when inputs change ----
-  # shiny::observe({
-  #   if (input$stock == "EEM" || input$stock == "EWZ" || input$stock == "FXI" ||
-  #       input$stock == "GDX" || input$stock == "SLV" || input$stock == "SPY" ||
-  #       input$stock == "XLE")  {
-  #     shiny::updateSelectInput(session, "earn_close", selected = "No")
-  #   }
-  # })
 })
