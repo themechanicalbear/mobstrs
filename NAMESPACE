@@ -3,6 +3,8 @@
 export(calc_comm)
 export(histogramServer)
 export(histogramUI)
+export(moduleDashboardSidebarServer)
+export(moduleDashboardSidebarUI)
 export(moduleGGPlotServer)
 export(moduleGGPlotUI)
 export(modulePortfolioPlotServer)

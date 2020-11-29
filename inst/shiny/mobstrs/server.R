@@ -53,6 +53,8 @@ shiny::shinyServer(function(input, output, session) {
          <strong>Run Study</strong>&nbsp;to see the results</p>")
   })
 
+  moduleDashboardSidebarServer("shiny_sidebar")
+
   observe({
     if (input$host == "local") {
       data_root <- here::here("data/options/")
