@@ -40,13 +40,6 @@ shinydashboard::dashboardPage(
     tags$head(tags$style(HTML('.shiny-server-account { display: none; }'))),
     uiOutput("userpanel"),
 
-    # introBox(
-    #   shiny::actionButton("help", "Press for instructions"),
-    #   data.step = 1,
-    #   data.intro = "This is a button",
-    #   data.hint = "You can press me"
-    # ),
-
     shinydashboard::sidebarMenu(
       shinydashboard::menuItem("Study", tabName = "Study", icon = icon("cogs"), startExpanded = TRUE,
                                shiny::selectInput("host", "Host", global_host_types),
@@ -97,12 +90,11 @@ shinydashboard::dashboardPage(
                     shiny::htmlOutput("exit_expiration"),
                     shiny::htmlOutput("exit_gamma_risk"))),
     shiny::fluidRow(
-      tabBox(
-        id = "tabset1", height = "800px", width = "1000px",
-        shiny::tabPanel("Module_Table", moduleTableUI("table1")),
-        shiny::tabPanel("Module_GGPlot", moduleGGPlotUI("ggplot_chart")),
-        shiny::tabPanel("Module_Portfolio_Plot", modulePortfolioPlotUI("portfolio_plot")),
-        shiny::tabPanel("Module_Quantmod_Plot", moduleQuantmodPlotUI("quantmod_plot"))
+      tabBox(id = "tabset1", height = "800px", width = "1000px",
+             shiny::tabPanel("Module_Table", moduleTableUI("table1")),
+             shiny::tabPanel("Module_GGPlot", moduleGGPlotUI("ggplot_chart")),
+             shiny::tabPanel("Module_Portfolio_Plot", modulePortfolioPlotUI("portfolio_plot")),
+             shiny::tabPanel("Module_Quantmod_Plot", moduleQuantmodPlotUI("quantmod_plot"))
       )
     )
   )

@@ -138,80 +138,7 @@ shiny::shinyServer(function(input, output, session) {
     if (study == "Call Calendar") {call_calendar(progress.int, t)}
     if (study == "Poor Mans Cov Call") {pmcc(progress.int, t)}
     if (study == "Short Call") {short_call(progress.int, t)}
-    # if (study == "Short Put") {short_put(progress.int, t)}
-    if (study == "Short Put") {
-      study_params <- tolower(paste0(input$study, "_", input$stock, "_",
-                             input$open_dte))
-      study_params <- gsub("-", "", study_params)
-      study_params <- gsub(" ", "", study_params)
-
-      assign("study_params", study_params, envir = .GlobalEnv)
-
-      athena <- mobstr::athena_connect(global_athena_db)
-      tbl_list <- DBI::dbListTables(athena)
-
-      # if (study_params %in% tbl_list) {
-      #   results <- athena %>%
-      #     dplyr::tbl(study_params) %>%
-      #     dplyr::collect()
-      #
-      #   assign("results", results, envir = .GlobalEnv)
-      #   assign("results_table", results, envir = .GlobalEnv)
-      # }
-
-      # else {
-        opened_puts <- mobstr::open_leg(conn = athena,
-                                        table = global_athena_tbl,
-                                        stock = stock,
-                                        put_call = "put",
-                                        direction = "short",
-                                        tar_delta = p_delta,
-                                        tar_dte = o_dte) %>%
-          dplyr::mutate(quotedate = as.Date(quotedate, "%Y-%m-%d"),
-                        expiration = as.Date(expiration, "%Y-%m-%d")) %>%
-          dplyr::filter(quotedate %in% first_day$date)
-
-        assign("opened_puts", opened_puts, envir = open_trades)
-
-        sub_options <- athena %>%
-          dplyr::tbl(global_athena_tbl) %>%
-          dplyr::filter(symbol == stock) %>%
-          dplyr::filter(quotedate == expiration,
-                        strike %in% !!opened_puts$put_strike) %>%
-          dplyr::collect()
-
-        results <- purrr::pmap_dfr(list(df = list(sub_options),
-                                        entry_date = opened_puts$quotedate,
-                                        exp = opened_puts$expiration,
-                                        typ = list("put"),
-                                        stk = opened_puts$put_strike,
-                                        entry_mid = opened_puts$put_open_short,
-                                        entry_delta = opened_puts$delta,
-                                        stk_price = opened_puts$close,
-                                        direction = list("short")),
-                                   mobstr::close_leg) %>%
-          arrange(entry_date) %>%
-          mutate(profit = put_profit * 100) %>%
-          mutate(portfolio_profit = cumsum(profit))
-
-        # assign_global(results, results)
-        assign("results", results, envir = .GlobalEnv)
-        assign("results_table", results, envir = .GlobalEnv)
-
-        # aws.s3::s3write_using(results, FUN = readr::write_csv,
-        #               bucket = paste0("mechanicalbear-athena", "/", study_params),
-        #               object = paste0(study_params, ".csv"))
-
-        # Write to Athena
-        # athena <- mobstr::athena_connect(global_athena_db)
-
-        # mobstr::athena_load(conn = athena,
-        #             database = global_athena_db,
-        #             s3_bucket = "mechanicalbear-athena",
-        #             name = study_params,
-        #             df = results)
-      #}
-    }
+    if (study == "Short Put") {moduleStudyShortPutServer("ShortPutStudy", input$study, input$stock, input$open_dte)}
     if (study == "Short Put Spread") {short_put_spread(progress.int, t)}
     if (study == "Long Stock") {LongStock(progress.int, t)}
     if (study == "Strangle") {strangle(progress.int, data_set, t)}
@@ -229,18 +156,10 @@ shiny::shinyServer(function(input, output, session) {
 
     environment(output_HTML) <- environment()
     output_HTML()
-
     moduleTableServer("table1")
     moduleGGPlotServer("ggplot_chart")
     modulePortfolioPlotServer("portfolio_plot")
     moduleQuantmodPlotServer("quantmod_plot", input$stock)
-
-
-    # Scatterplot with contextual highlighting
-    # output$x2 = renderPlot({
-    #   environment(dynamicplot) <- environment()
-    #   dynamicplot()
-    # })
 
     # Download table
     output$downloadData <- shiny::downloadHandler(
@@ -253,11 +172,6 @@ shiny::shinyServer(function(input, output, session) {
     xvar_name <- names(axis_vars)[axis_vars == input$xvar]
     yvar_name <- names(axis_vars)[axis_vars == input$yvar]
 
-    # data_line <- data.frame(
-    #   x_rng = c(min(results$trade_open), max(results$trade_open)),
-    #   y_rng = c(0, 0)
-    # )
-
     strategy_min_max <- reactive({
       strategy_min_max <- results %>%
         dplyr::filter(strategy_portfolio == max(strategy_portfolio) |
@@ -266,18 +180,5 @@ shiny::shinyServer(function(input, output, session) {
         dplyr::filter(dplyr::row_number() == 1) %>%
         dplyr::ungroup()
     })
-
-    # # Testing ideas for plot format needed for the quantmod plot
-    library(quantmod)
-    library(xts)
-    library(rvest)
-    library(tidyverse)
-    library(stringr)
-    library(forcats)
-    library(lubridate)
-    library(plotly)
-    library(dplyr)
-    library(PerformanceAnalytics)
-
   })
 })
